@@ -346,7 +346,7 @@ Context: {context}
 
 
 # Streamlit UI Setup
-st.title("SFBU RAG Chatbot with Weaviate")
+st.title("SFBU RAG Chatbot with Weaviate Cloud")
 
 # Pod role indicator
 if is_writer_pod():
