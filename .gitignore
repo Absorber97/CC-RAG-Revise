@@ -72,4 +72,26 @@ Desktop.ini
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]
-*$py.class 
+*$py.class
+
+# Kubernetes
+.generated/
+kubeconfig
+*.kubeconfig
+
+# Docker
+.docker/
+
+# Deployment
+node_modules/
+npm-debug.log
+
+# Temporary files
+*.tmp
+*.temp
+.coverage
+htmlcov/
+
+# GCP
+*.serviceaccount.json
+.gcloud/ 

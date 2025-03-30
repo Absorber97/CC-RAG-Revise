@@ -1,0 +1,103 @@
+# Version control
+.git
+.gitignore
+.github
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+env/
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+*.egg-info/
+.installed.cfg
+*.egg
+
+# Virtual Environment
+venv/
+ENV/
+env/
+.venv
+env.bak/
+venv.bak/
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+
+# Documentation
+README.md
+LICENSE
+docs/
+*.md
+
+# Logs and diagnostics
+logs/
+*.log
+
+# Local project files
+chroma_sfbu/
+.weaviate/
+temp_files/
+.chroma/
+embeddings/
+uploads/
+tmp/
+
+# Docker-specific
+Dockerfile
+docker-compose.yml
+.dockerignore
+
+# Kubernetes
+kubernetes/
+charts/
+.generated/
+kubeconfig
+*.kubeconfig
+
+# Scripts
+scripts/
+
+# Test files
+*_test.py
+tests/
+
+# Temporary files
+*.tmp
+*.temp
+.coverage
+htmlcov/
+
+# Allows for environment files to be used during build but not included in the image
+# .env is copied explicitly in the Dockerfile when needed
+.env
+*.env
+
+# macOS
+.DS_Store
+
+# Windows
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+
+# Keep these files for building
+!requirements.txt
+!streamlitui.py
+!fix-secrets.py 
