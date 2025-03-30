@@ -1,0 +1,10 @@
+streamlit
+python-dotenv
+langchain-openai
+langchain-core
+langchain-community
+langchain-text-splitters
+weaviate-client>=4.0.0
+langchain-weaviate
+pypdf
+wikipedia 

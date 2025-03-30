@@ -1,0 +1,75 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+env/
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+*.egg-info/
+.installed.cfg
+*.egg
+
+# Virtual Environment
+venv/
+ENV/
+env/
+.env
+.venv
+env.bak/
+venv.bak/
+
+# Streamlit
+.streamlit/secrets.toml
+.streamlit/config.toml
+
+# Jupyter Notebooks
+.ipynb_checkpoints
+*.ipynb
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+
+# Logs
+logs/
+*.log
+
+# Project specific
+chroma_sfbu/
+.weaviate/
+temp_files/
+.chroma/
+embeddings/
+uploads/
+tmp/
+
+# Environment variables
+.env
+*.env
+
+# macOS
+.DS_Store
+
+# Windows
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*$py.class 
