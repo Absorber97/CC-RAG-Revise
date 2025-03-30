@@ -122,4 +122,75 @@ kubectl get service streamlit-app
 4. Verify secrets are properly created:
 ```bash
 kubectl get secrets app-secrets
+```
+
+## Load Balancing with Ingress
+
+This repository includes an advanced deployment option using Kubernetes Ingress for load balancing and SSL termination.
+
+### Features
+
+- **NGINX Ingress Controller**: Routes external traffic to the application
+- **Let's Encrypt SSL**: Automatic SSL certificate generation and renewal
+- **nip.io Domain**: Uses nip.io service for easy DNS resolution without domain registration
+- **Load Balancing**: Routes traffic across multiple application instances
+
+### Ingress Deployment
+
+To deploy the application with Ingress support:
+
+1. Make the Ingress deployment script executable:
+
+```bash
+chmod +x scripts/deploy-with-ingress.sh
+```
+
+2. Run the Ingress deployment script:
+
+```bash
+./scripts/deploy-with-ingress.sh
+```
+
+This will:
+- Deploy the NGINX Ingress Controller
+- Set up cert-manager for Let's Encrypt integration
+- Deploy the application and service
+- Configure the Ingress resource with the nip.io domain
+- Obtain SSL certificates automatically
+
+### Accessing the Application
+
+After deployment, the script will output the URL where your application is accessible, usually in the format:
+
+```
+https://streamlit-app.[LOAD_BALANCER_IP].nip.io
+```
+
+### Ingress Troubleshooting
+
+If you encounter issues with the Ingress setup:
+
+1. Check Ingress status:
+```bash
+kubectl get ingress
+```
+
+2. Check certificate status:
+```bash
+kubectl get certificate
+```
+
+3. Check Ingress controller logs:
+```bash
+kubectl logs -n ingress-nginx deployment/ingress-nginx-controller
+```
+
+4. Check cert-manager logs:
+```bash
+kubectl logs -n cert-manager deployment/cert-manager
+```
+
+5. Verify TLS secret creation:
+```bash
+kubectl get secret streamlit-app-tls
 ``` 

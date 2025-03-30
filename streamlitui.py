@@ -92,7 +92,7 @@ def init_openai():
             st.error("OpenAI API key is required. Please set OPENAI_API_KEY in your .env file.")
             st.stop()
             
-        client = ChatOpenAI(api_key=SecretStr(OPENAI_API_KEY))
+        client = ChatOpenAI(api_key=OPENAI_API_KEY)
         logger.info("OpenAI client initialized successfully")
         return client
     except Exception as e:
@@ -108,7 +108,7 @@ def init_openai_embeddings():
             st.error("OpenAI API key is required. Please set OPENAI_API_KEY in your .env file.")
             st.stop()
             
-        embeddings = OpenAIEmbeddings(api_key=SecretStr(OPENAI_API_KEY))
+        embeddings = OpenAIEmbeddings(api_key=OPENAI_API_KEY)
         logger.info("OpenAI embeddings initialized successfully")
         return embeddings
     except Exception as e:
@@ -496,3 +496,19 @@ try:
     atexit.register(cleanup)
 except Exception:
     logger.warning("Could not register cleanup handler")
+
+
+# Add a debug block at the end of the file
+if __name__ == "__main__":
+    import os
+    print(f"DEBUG: OPENAI_API_KEY exists: {os.environ.get('OPENAI_API_KEY') is not None}")
+    print(f"DEBUG: WEAVIATE_URL exists: {os.environ.get('WEAVIATE_URL') is not None}")
+    print(f"DEBUG: WEAVIATE_API_KEY exists: {os.environ.get('WEAVIATE_API_KEY') is not None}")
+
+
+# Add a debug block at the end of the file
+if __name__ == "__main__":
+    import os
+    print(f"DEBUG: OPENAI_API_KEY exists: {os.environ.get('OPENAI_API_KEY') is not None}")
+    print(f"DEBUG: WEAVIATE_URL exists: {os.environ.get('WEAVIATE_URL') is not None}")
+    print(f"DEBUG: WEAVIATE_API_KEY exists: {os.environ.get('WEAVIATE_API_KEY') is not None}")
