@@ -1,18 +1,65 @@
-# SFBU RAG Chatbot - Kubernetes Deployment
+# 🚀 SFBU RAG Chatbot - Kubernetes Deployment
 
 This repository contains a Streamlit application that uses RAG (Retrieval-Augmented Generation) with Weaviate as a vector database to create a chatbot capable of answering questions based on uploaded documents.
 
-## Setup and Deployment
+## 📋 Table of Contents
+- [Overview](#overview)
+- [Features](#features)
+- [Architecture](#architecture)
+- [Prerequisites](#prerequisites)
+- [Environment Variables](#environment-variables)
+- [Deployment Options](#deployment-options)
+  - [Initial Deployment](#initial-deployment)
+  - [Update Existing Deployment](#update-existing-deployment)
+  - [Load Balancing with Ingress](#load-balancing-with-ingress)
+- [Application Usage](#application-usage)
+- [Monitoring](#monitoring)
+- [Troubleshooting](#troubleshooting)
+- [Development](#development)
 
-### Prerequisites
+## 🔍 Overview
 
-- Docker installed on your local machine (optional)
+This application leverages OpenAI's language models and Weaviate's vector database capabilities to create a document-based question answering system. It processes various document formats, embeds them into vector representations, and uses retrieval-augmented generation to provide accurate answers based on the uploaded content.
+
+## ✨ Features
+
+- **Document Processing**: Upload and process various document types (PDF, text, web pages, or Wikipedia articles)
+- **Vector Embedding**: Stores document chunks as vector embeddings using OpenAI embeddings
+- **RAG Implementation**: Uses Retrieval-Augmented Generation for accurate and relevant answers
+- **Kubernetes Deployment**: Scalable deployment with multiple replicas
+- **Monitoring**: Integrated Prometheus and Grafana monitoring
+- **Ingress Support**: Advanced deployment with NGINX Ingress Controller and Let's Encrypt SSL
+
+## 🏗️ Architecture
+
+The application is deployed with the following components:
+
+- **Streamlit Frontend**: User interface for document upload and question answering
+- **Weaviate Vector Database**: Stores document embeddings for efficient retrieval
+- **OpenAI Integration**: Provides embeddings and language model capabilities
+- **Kubernetes Resources**:
+  - **Deployment**: Runs 3 replica pods, all configured as writers
+  - **Service**: Exposes the application via a LoadBalancer
+  - **Secrets**: Stores sensitive API keys and connection information
+  - **Monitoring**: Prometheus and Grafana for application monitoring
+  - **Ingress**: Optional NGINX Ingress Controller for routing and SSL
+
+Each pod is configured with:
+- Readiness and liveness probes
+- Resource limits and requests
+- Environment variables loaded from Kubernetes secrets
+
+## 🔧 Prerequisites
+
+- Docker installed on your local machine (optional for local testing)
 - Google Cloud SDK (gcloud) installed and configured
-- kubectl installed
+- kubectl installed and configured
 - A GKE (Google Kubernetes Engine) cluster created
 - Access to Google Container Registry (GCR)
+- OpenAI API key
+- Weaviate Cloud instance (or self-hosted Weaviate) with API key
 
-### Environment Variables
+## 🔐 Environment Variables
 
 Configure the following environment variables in a `.env` file:
 
@@ -31,6 +78,8 @@ GKE_ZONE=your_gke_zone
 ```
 
 > **Important**: Make sure your .env file contains valid values for all required variables. The deployment will fail if these are missing or incorrect.
+
+## 🚢 Deployment Options
 
 ### Initial Deployment
 
@@ -57,13 +106,7 @@ This will:
 
 To update your deployment after making changes:
 
-1. Make the update script executable:
-
-```bash
-chmod +x scripts/update.sh
-```
-
-2. Run the update script:
+1. Run the update script:
 
 ```bash
 ./scripts/update.sh
@@ -71,38 +114,96 @@ chmod +x scripts/update.sh
 
 This will build a new image with a timestamp tag, push it to GCR, and update the deployment.
 
-## Architecture
+### Load Balancing with Ingress
 
-The application is deployed with the following components:
+This repository includes an advanced deployment option using Kubernetes Ingress for load balancing and SSL termination.
 
-- **Deployment**: Runs 3 replica pods, all configured as writers
-- **Service**: Exposes the application via a LoadBalancer
-- **Secrets**: Stores sensitive API keys and connection information
+#### Features
 
-Each pod is configured with:
-- Readiness and liveness probes
-- Resource limits and requests
-- Environment variables loaded from Kubernetes secrets
+- **NGINX Ingress Controller**: Routes external traffic to the application
+- **Let's Encrypt SSL**: Automatic SSL certificate generation and renewal
+- **nip.io Domain**: Uses nip.io service for easy DNS resolution without domain registration
+- **Load Balancing**: Routes traffic across multiple application instances
 
-## Usage
+#### Ingress Deployment
 
-Once deployed, access the application through the LoadBalancer IP address. You can:
+To deploy the application with Ingress support:
+
+1. Make the Ingress deployment script executable:
+
+```bash
+chmod +x scripts/ingress-setup.sh
+```
+
+2. Run the Ingress deployment script:
+
+```bash
+./scripts/ingress-setup.sh
+```
+
+This will:
+- Deploy the NGINX Ingress Controller
+- Set up cert-manager for Let's Encrypt integration
+- Deploy the application and service
+- Configure the Ingress resource with the nip.io domain
+- Obtain SSL certificates automatically
+
+#### Accessing the Application with Ingress
+
+After deployment, the script will output the URL where your application is accessible, usually in the format:
+
+```
+https://streamlit-app.[LOAD_BALANCER_IP].nip.io
+```
+
+## 📊 Monitoring
+
+The application includes a comprehensive monitoring stack based on Prometheus and Grafana.
+
+### Monitoring Components
+
+- **Prometheus**: Collects metrics from the application, nodes, and Kubernetes
+- **Grafana**: Visualizes the collected metrics with pre-configured dashboards
+- **Node Exporter**: Collects hardware and OS metrics
+- **Kube State Metrics**: Collects Kubernetes state metrics
+
+### Deploying Monitoring
+
+To deploy the monitoring stack:
+
+```bash
+chmod +x scripts/monitoring-setup.sh
+./scripts/monitoring-setup.sh
+```
+
+### Accessing Monitoring Dashboards
+
+1. Forward Prometheus port:
+   ```bash
+   kubectl port-forward -n monitoring service/prometheus-service 9090:9090
+   ```
+   Access at: http://localhost:9090
+
+2. Forward Grafana port:
+   ```bash
+   kubectl port-forward -n monitoring service/grafana-service 3000:80
+   ```
+   Access at: http://localhost:3000
+   Default credentials: admin/admin
+
+## 💻 Application Usage
+
+Once deployed, access the application through the LoadBalancer IP address or the Ingress URL. You can:
 
 1. Upload documents (PDF, text, web pages, or Wikipedia articles)
 2. Ask questions about the uploaded documents
 3. View and interact with the chat history
 
-## Development
+The application leverages RAG to provide accurate answers based on the content of the uploaded documents.
 
-To modify or extend the application:
+## 🔍 Troubleshooting
 
-1. Update `streamlitui.py` for application changes
-2. Update Kubernetes configuration in the `kubernetes/` directory if needed
-3. Run the update script to deploy your changes
-
-## Troubleshooting
-
-If you encounter issues:
+### Pod Issues
 
 1. Check pod logs:
 ```bash
@@ -124,51 +225,7 @@ kubectl get service streamlit-app
 kubectl get secrets app-secrets
 ```
 
-## Load Balancing with Ingress
-
-This repository includes an advanced deployment option using Kubernetes Ingress for load balancing and SSL termination.
-
-### Features
-
-- **NGINX Ingress Controller**: Routes external traffic to the application
-- **Let's Encrypt SSL**: Automatic SSL certificate generation and renewal
-- **nip.io Domain**: Uses nip.io service for easy DNS resolution without domain registration
-- **Load Balancing**: Routes traffic across multiple application instances
-
-### Ingress Deployment
-
-To deploy the application with Ingress support:
-
-1. Make the Ingress deployment script executable:
-
-```bash
-chmod +x scripts/deploy-with-ingress.sh
-```
-
-2. Run the Ingress deployment script:
-
-```bash
-./scripts/deploy-with-ingress.sh
-```
-
-This will:
-- Deploy the NGINX Ingress Controller
-- Set up cert-manager for Let's Encrypt integration
-- Deploy the application and service
-- Configure the Ingress resource with the nip.io domain
-- Obtain SSL certificates automatically
-
-### Accessing the Application
-
-After deployment, the script will output the URL where your application is accessible, usually in the format:
-
-```
-https://streamlit-app.[LOAD_BALANCER_IP].nip.io
-```
-
-### Ingress Troubleshooting
-
-If you encounter issues with the Ingress setup:
+### Ingress Issues
 
 1. Check Ingress status:
 ```bash
@@ -193,4 +250,54 @@ kubectl logs -n cert-manager deployment/cert-manager
 5. Verify TLS secret creation:
 ```bash
 kubectl get secret streamlit-app-tls
-``` 
+```
+
+### Monitoring Issues
+
+1. Check monitoring stack status:
+```bash
+kubectl get pods -n monitoring
+```
+
+2. Check Prometheus targets:
+```bash
+kubectl port-forward -n monitoring service/prometheus-service 9090:9090
+# Then visit http://localhost:9090/targets
+```
+
+3. Verify Streamlit metrics endpoint:
+```bash
+kubectl port-forward <streamlit-pod-name> 8501:8501
+curl http://localhost:8501/_stcore/metrics
+```
+
+4. Reset monitoring if needed:
+```bash
+./scripts/cleanup-monitoring.sh
+./scripts/monitoring-setup.sh
+```
+
+## 🛠️ Development
+
+To modify or extend the application:
+
+1. Update `streamlitui.py` for application changes
+2. Update Kubernetes configuration in the `kubernetes/` directory if needed
+3. Run the update script to deploy your changes
+
+### Local Development
+
+For local testing before deployment:
+
+1. Create a `.env` file with your API keys
+2. Install dependencies: `pip install -r requirements.txt`
+3. Run the application: `streamlit run streamlitui.py`
+
+### Building Custom Docker Images
+
+If you want to build and use your own Docker image:
+
+1. Modify the Dockerfile as needed
+2. Build the image: `docker build -t your-registry/streamlit-app:tag .`
+3. Push to your registry: `docker push your-registry/streamlit-app:tag`
+4. Update the deployment YAML to use your image 

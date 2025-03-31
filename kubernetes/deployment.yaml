@@ -14,6 +14,10 @@ spec:
       labels:
         app: streamlit-app
         role: writer
+      annotations:
+        prometheus.io/scrape: "true"
+        prometheus.io/port: "8501"
+        prometheus.io/path: "/_stcore/metrics"
     spec:
       containers:
       - name: streamlit

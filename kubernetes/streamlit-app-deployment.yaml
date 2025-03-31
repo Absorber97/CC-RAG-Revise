@@ -1,0 +1,45 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: streamlit-app
+  namespace: default
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: streamlit-app
+  template:
+    metadata:
+      labels:
+        app: streamlit-app
+        role: writer
+      annotations:
+        prometheus.io/scrape: "true"
+        prometheus.io/path: "/_stcore/metrics"
+        prometheus.io/port: "8501"
+    spec:
+      containers:
+      - name: streamlit-app
+        image: streamlit-app:latest
+        ports:
+        - containerPort: 8501
+        resources:
+          requests:
+            memory: "256Mi"
+            cpu: "100m"
+          limits:
+            memory: "512Mi"
+            cpu: "300m"
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: streamlit-app
+  namespace: default
+spec:
+  selector:
+    app: streamlit-app
+  ports:
+  - port: 8501
+    targetPort: 8501
+  type: ClusterIP 
