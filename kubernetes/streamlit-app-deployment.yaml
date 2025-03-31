@@ -25,11 +25,11 @@ spec:
         - containerPort: 8501
         resources:
           requests:
-            memory: "256Mi"
-            cpu: "100m"
+            memory: "300Mi"
+            cpu: "150m"
           limits:
-            memory: "512Mi"
-            cpu: "300m"
+            memory: "800Mi"
+            cpu: "400m"
 ---
 apiVersion: v1
 kind: Service

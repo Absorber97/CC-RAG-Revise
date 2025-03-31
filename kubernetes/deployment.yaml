@@ -48,11 +48,11 @@ spec:
         - containerPort: 8501
         resources:
           requests:
-            cpu: "250m"
-            memory: "512Mi"
+            cpu: "150m"
+            memory: "300Mi"
           limits:
-            cpu: "500m"
-            memory: "1Gi"
+            cpu: "400m"
+            memory: "800Mi"
         readinessProbe:
           httpGet:
             path: /_stcore/health
