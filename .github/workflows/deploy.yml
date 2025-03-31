@@ -1,0 +1,134 @@
+name: Build and Deploy to GKE
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+env:
+  PROJECT_ID: ${{ secrets.GCP_PROJECT_ID }}
+  GKE_CLUSTER: ${{ secrets.GKE_CLUSTER }}
+  GKE_ZONE: ${{ secrets.GKE_ZONE }}
+  IMAGE: streamlit-app
+
+jobs:
+  setup-build-publish-deploy:
+    name: Setup, Build, Publish, and Deploy
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v4
+
+    # Setup gcloud CLI
+    - name: Setup gcloud CLI
+      uses: google-github-actions/auth@v1
+      with:
+        credentials_json: ${{ secrets.GCP_SA_KEY }}
+
+    - name: Set up Cloud SDK
+      uses: google-github-actions/setup-gcloud@v1
+
+    # Configure Docker to use the gcloud command-line tool as a credential helper
+    - name: Configure Docker for GCR
+      run: gcloud --quiet auth configure-docker
+
+    # Get the GKE credentials
+    - name: Get GKE credentials
+      uses: google-github-actions/get-gke-credentials@v1
+      with:
+        cluster_name: ${{ env.GKE_CLUSTER }}
+        location: ${{ env.GKE_ZONE }}
+
+    # Create generated directory
+    - name: Create generated directory
+      run: mkdir -p .generated
+
+    # Create Kubernetes secrets
+    - name: Create secrets
+      run: |
+        echo "Creating Kubernetes secrets with proper encoding..."
+        
+        # Base64 encode the variables
+        OPENAI_API_KEY_BASE64=$(echo -n "${{ secrets.OPENAI_API_KEY }}" | base64 -w 0)
+        WEAVIATE_URL_BASE64=$(echo -n "${{ secrets.WEAVIATE_URL }}" | base64 -w 0)
+        WEAVIATE_API_KEY_BASE64=$(echo -n "${{ secrets.WEAVIATE_API_KEY }}" | base64 -w 0)
+        
+        # Create the secrets file with actual base64 encoded values
+        cat kubernetes/secret.yaml | \
+          sed "s|OPENAI_API_KEY_BASE64|$OPENAI_API_KEY_BASE64|g" | \
+          sed "s|WEAVIATE_URL_BASE64|$WEAVIATE_URL_BASE64|g" | \
+          sed "s|WEAVIATE_API_KEY_BASE64|$WEAVIATE_API_KEY_BASE64|g" \
+          > .generated/secret.yaml
+        
+        echo "Secret configuration created successfully at .generated/secret.yaml"
+
+    # Build the Docker image
+    - name: Build Docker image
+      run: |
+        TAG=$(date +%Y%m%d-%H%M%S)
+        docker build \
+          --platform linux/amd64 \
+          --tag "gcr.io/$PROJECT_ID/$IMAGE:$TAG" \
+          --tag "gcr.io/$PROJECT_ID/$IMAGE:latest" \
+          --build-arg GITHUB_SHA=$GITHUB_SHA \
+          --build-arg GITHUB_REF=$GITHUB_REF \
+          .
+        echo "IMAGE_TAG=$TAG" >> $GITHUB_ENV
+
+    # Push the Docker image to Google Container Registry
+    - name: Push Docker image
+      run: |
+        docker push "gcr.io/$PROJECT_ID/$IMAGE:${{ env.IMAGE_TAG }}"
+        docker push "gcr.io/$PROJECT_ID/$IMAGE:latest"
+
+    # Process and apply Kubernetes deployment and service configs
+    - name: Process Kubernetes configs
+      run: |
+        # Process other YAML files (don't process secret.yaml as it's handled separately)
+        for file in kubernetes/*.yaml; do
+          if [[ "$file" != *"secret.yaml"* ]]; then
+            filename=$(basename "$file")
+            cat "$file" | sed "s|latest|${{ env.IMAGE_TAG }}|g" > ".generated/$filename"
+          fi
+        done
+
+    # Apply Kubernetes resources
+    - name: Apply Kubernetes resources
+      run: |
+        kubectl apply -f .generated/secret.yaml
+        kubectl apply -f .generated/deployment.yaml
+        kubectl apply -f .generated/service.yaml
+        
+        # Wait for deployment to be ready
+        kubectl rollout status deployment/streamlit-app
+
+    # Deploy monitoring stack (optional)
+    - name: Deploy monitoring (optional)
+      run: |
+        if [[ "${{ github.event_name }}" == "workflow_dispatch" || "${{ contains(github.event.head_commit.message, 'deploy-monitoring') }}" == "true" ]]; then
+          echo "Deploying monitoring stack..."
+          chmod +x scripts/monitoring-setup.sh
+          ./scripts/monitoring-setup.sh
+        else
+          echo "Skipping monitoring deployment. Add 'deploy-monitoring' to commit message to deploy monitoring."
+        fi
+
+    # Output deployment info
+    - name: Output service URL
+      run: |
+        echo "Waiting for LoadBalancer IP..."
+        for i in {1..30}; do
+          SERVICE_IP=$(kubectl get service streamlit-app -o jsonpath='{.status.loadBalancer.ingress[0].ip}' 2>/dev/null || echo "")
+          if [ -n "$SERVICE_IP" ]; then
+            echo "✅ Deployment successful! Your application is available at: http://$SERVICE_IP"
+            break
+          fi
+          echo "Waiting for service IP... (attempt $i/30)"
+          sleep 10
+        done
+        
+        if [ -z "$SERVICE_IP" ]; then
+          echo "⚠️ Service IP not yet available. Please check the service status manually."
+        fi 

@@ -114,6 +114,72 @@ To update your deployment after making changes:
 
 This will build a new image with a timestamp tag, push it to GCR, and update the deployment.
 
+### Automated CI/CD with GitHub Actions
+
+This repository is configured with GitHub Actions for continuous integration and deployment. The workflow automatically builds, publishes, and deploys the application when changes are pushed to the main branch.
+
+#### Setting Up GitHub Actions
+
+1. Add the following secrets to your GitHub repository:
+   - `GCP_PROJECT_ID`: Your Google Cloud project ID
+   - `GKE_CLUSTER`: Your GKE cluster name
+   - `GKE_ZONE`: Your GKE cluster zone
+   - `GCP_SA_KEY`: Your GCP service account key (JSON format)
+   - `OPENAI_API_KEY`: Your OpenAI API key
+   - `WEAVIATE_URL`: Your Weaviate instance URL
+   - `WEAVIATE_API_KEY`: Your Weaviate API key
+
+2. Push changes to the main branch to trigger the deployment pipeline.
+
+3. You can also manually trigger deployments from the "Actions" tab in your GitHub repository.
+
+#### Required GCP Service Account Permissions
+
+The service account used for GitHub Actions (referenced by `GCP_SA_KEY`) needs the following roles:
+
+1. **Kubernetes Engine Admin** (`roles/container.admin`): Allows management of Kubernetes clusters and their Kubernetes API objects
+2. **Storage Admin** (`roles/storage.admin`): Provides access to Google Container Registry for pushing and pulling images
+3. **Service Account User** (`roles/iam.serviceAccountUser`): Allows the service account to impersonate service accounts
+4. **Artifact Registry Administrator** (`roles/artifactregistry.admin`): Full control of Artifact Registry repositories (if using Artifact Registry)
+
+You can create and configure a service account with these permissions using the following commands:
+
+```bash
+# Create a service account for GitHub Actions
+export PROJECT_ID=your-project-id
+export SA_NAME=github-actions-cicd
+
+# Create the service account
+gcloud iam service-accounts create $SA_NAME --display-name="GitHub Actions CI/CD"
+
+# Get the service account email
+export SA_EMAIL=$(gcloud iam service-accounts list --filter="displayName:GitHub Actions CI/CD" --format='value(email)')
+
+# Grant the necessary roles
+gcloud projects add-iam-policy-binding $PROJECT_ID --member="serviceAccount:$SA_EMAIL" --role="roles/container.admin"
+gcloud projects add-iam-policy-binding $PROJECT_ID --member="serviceAccount:$SA_EMAIL" --role="roles/storage.admin"
+gcloud projects add-iam-policy-binding $PROJECT_ID --member="serviceAccount:$SA_EMAIL" --role="roles/iam.serviceAccountUser"
+gcloud projects add-iam-policy-binding $PROJECT_ID --member="serviceAccount:$SA_EMAIL" --role="roles/artifactregistry.admin"
+
+# Create and download the JSON key file
+gcloud iam service-accounts keys create key.json --iam-account=$SA_EMAIL
+
+# Base64 encode the key for GitHub Secrets (Linux/macOS)
+cat key.json | base64
+```
+
+Keep the JSON key secure and use it as the value for the `GCP_SA_KEY` secret in your GitHub repository.
+
+#### Deployment with Monitoring
+
+To deploy the application with monitoring, include `deploy-monitoring` in your commit message:
+
+```bash
+git commit -m "feature: add new functionality [deploy-monitoring]"
+```
+
+This will deploy both the application and the monitoring stack.
+
 ### Load Balancing with Ingress
 
 This repository includes an advanced deployment option using Kubernetes Ingress for load balancing and SSL termination.
@@ -175,6 +241,23 @@ To deploy the monitoring stack:
 chmod +x scripts/monitoring-setup.sh
 ./scripts/monitoring-setup.sh
 ```
+
+### Initializing Grafana
+
+A one-time setup script is provided to configure Grafana with default dashboards and data sources:
+
+```bash
+chmod +x scripts/grafana-init.sh
+./scripts/grafana-init.sh
+```
+
+This script will:
+1. Set up port forwarding to Grafana
+2. Configure the Prometheus data source
+3. Import a Streamlit application dashboard with CPU, memory, and request metrics
+4. Set organization preferences
+
+After running the script, Grafana will be accessible at http://localhost:3000 with default credentials (admin/admin).
 
 ### Accessing Monitoring Dashboards
 
