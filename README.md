@@ -11,6 +11,7 @@ This repository contains a Streamlit application that uses RAG (Retrieval-Augmen
 - [Deployment Options](#deployment-options)
   - [Initial Deployment](#initial-deployment)
   - [Update Existing Deployment](#update-existing-deployment)
+  - [Automated CI/CD with GitHub Actions](#automated-cicd-with-github-actions)
   - [Load Balancing with Ingress](#load-balancing-with-ingress)
 - [Application Usage](#application-usage)
 - [Monitoring](#monitoring)
@@ -29,6 +30,7 @@ This application leverages OpenAI's language models and Weaviate's vector databa
 - **Kubernetes Deployment**: Scalable deployment with multiple replicas
 - **Monitoring**: Integrated Prometheus and Grafana monitoring
 - **Ingress Support**: Advanced deployment with NGINX Ingress Controller and Let's Encrypt SSL
+- **CI/CD Pipeline**: Automated deployment with GitHub Actions
 
 ## 🏗️ Architecture
 
@@ -41,13 +43,14 @@ The application is deployed with the following components:
   - **Deployment**: Runs 3 replica pods, all configured as writers
   - **Service**: Exposes the application via a LoadBalancer
   - **Secrets**: Stores sensitive API keys and connection information
-  - **Monitoring**: Prometheus and Grafana for application monitoring
+  - **Monitoring**: Prometheus and Grafana for application metrics
   - **Ingress**: Optional NGINX Ingress Controller for routing and SSL
 
 Each pod is configured with:
 - Readiness and liveness probes
-- Resource limits and requests
+- Resource limits and requests (CPU: 150m-400m, Memory: 300Mi-800Mi)
 - Environment variables loaded from Kubernetes secrets
+- Metrics endpoint for Prometheus scraping
 
 ## 🔧 Prerequisites
 
@@ -105,8 +108,6 @@ This will:
 ### Update Existing Deployment
 
 To update your deployment after making changes:
-
-1. Run the update script:
 
 ```bash
 ./scripts/update.sh
@@ -383,4 +384,20 @@ If you want to build and use your own Docker image:
 1. Modify the Dockerfile as needed
 2. Build the image: `docker build -t your-registry/streamlit-app:tag .`
 3. Push to your registry: `docker push your-registry/streamlit-app:tag`
-4. Update the deployment YAML to use your image 
+4. Update the deployment YAML to use your image
+
+### Technical Implementation Details
+
+The application is built with:
+
+- **Streamlit**: For the web interface
+- **LangChain**: For orchestrating the RAG pipeline
+- **Weaviate v4**: As the vector database for document embeddings 
+- **OpenAI API**: For embeddings and text generation
+
+The Streamlit application includes:
+- Document processing (PDF, text, web pages, Wikipedia)
+- Recursive character text splitting for chunking
+- OpenAI embeddings for vector representation
+- RAG pattern implementation with prompt templates
+- Stateful chat history with conversation memory 

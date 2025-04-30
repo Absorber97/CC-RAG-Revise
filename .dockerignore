@@ -101,3 +101,6 @@ Desktop.ini
 !requirements.txt
 !streamlitui.py
 !fix-secrets.py 
+
+# misc
+ignore

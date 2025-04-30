@@ -95,3 +95,6 @@ htmlcov/
 # GCP
 *.serviceaccount.json
 .gcloud/ 
+
+# misc
+ignore
